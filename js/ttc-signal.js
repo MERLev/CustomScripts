@@ -1,4 +1,4 @@
-//v. 0.2.7
+//v. 0.2.8
 var DELAY_KEY = "DELAY";
 var DELAY_RANDOM_KEY = "DELAY_RANDOM";
 var PAUSE_KEY = "PAUSE";

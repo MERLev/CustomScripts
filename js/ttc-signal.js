@@ -1,15 +1,14 @@
-//version 0.2.7
+//v. 0.2.7
 var DELAY_KEY = "DELAY";
 var DELAY_RANDOM_KEY = "DELAY_RANDOM";
 var PAUSE_KEY = "PAUSE";
 var audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
 $( document ).ready(function() {
-  console.log("Ready");
 	if (!window.location.href.includes("SearchResult")){
 	  return
 	}
 	if ($("#g-recaptcha-response")[0]){
-		speak('Капча, капча');
+		speak('Капча');
 		return
 	}
 	if (window.location.href.includes("Error")){
@@ -22,7 +21,32 @@ $( document ).ready(function() {
 			location.reload();
 		}
 	})
-	$(alertText()).insertAfter( "h2.text-warning" );
+	
+	var delay = localStorage.getItem(DELAY_KEY);
+	if (delay == null){
+		delay = 10000;
+	} else {
+	  delay = parseInt(delay);
+	}
+	
+	var delayRandom = localStorage.getItem(DELAY_RANDOM_KEY);
+	if (delayRandom == null){
+		delayRandom = 1000;
+	} else {
+	  delayRandom = parseInt(delayRandom);
+	}
+	
+	var pause = pauseEnabled();
+	if (pause == null){
+		pause = true;
+	}
+	
+	var signalPrice = localStorage.getItem(window.location.href);
+	
+	$(generateAlertHtml(signalPrice != null)).insertAfter( "h2.text-warning" );
+	$("#delay").val(delay);
+	$("#delayRandom").val(delayRandom);
+	$("#pauseFlag").prop("checked", pause);
 	$( "#applySignalButton" ).click(function() {
 		if ($("#signalPrice").val()){
 			localStorage.setItem(window.location.href, $("#signalPrice").val());
@@ -33,33 +57,10 @@ $( document ).ready(function() {
 		location.reload();
 	});
 	$( "#clearStorage" ).click(function() {
-	  localStorage.clear();
+		localStorage.clear();
 		location.reload();
 	});
 	
-	var delay = localStorage.getItem(DELAY_KEY);
-	if (delay == null){
-		delay = 10000;
-	} else {
-	  delay = parseInt(delay);
-	}
-	$("#delay").val(delay);
-	
-	var delayRandom = localStorage.getItem(DELAY_RANDOM_KEY);
-	if (delayRandom == null){
-		delayRandom = 1000;
-	} else {
-	  delayRandom = parseInt(delayRandom);
-	}
-	$("#delayRandom").val(delayRandom);
-	
-	var pause = pauseEnabled();
-	if (pause == null){
-		pause = true;
-	}
-	$("#pauseFlag").prop("checked", pause);
-	
-	var signalPrice = localStorage.getItem(window.location.href);
 	if (signalPrice != null){
 		$("#signalPrice").val(signalPrice);
 		var found = false;
@@ -75,7 +76,10 @@ $( document ).ready(function() {
 					speak(name);
 					localStorage.setItem(linkk, "found");
 				}
-				found = true;
+				var found = true;
+				$("#badgeFound").removeClass("hidden");
+				$("#badgeActive").addClass("hidden");
+				$("#badgeConfig").addClass("hidden");
 			}
 		});
 		if (!found || !pause){
@@ -85,17 +89,21 @@ $( document ).ready(function() {
 		}
 	}
 });
-function alertText() {
+function generateAlertHtml(active) {
 	return `
 	<div id="help-collect-data-alert" class="alert alert-warning alert-dismissable" role="alert">
 		<form class="row col-md-12 form-horizontal">
-			<div class="col-md-12"><div class="row form-group"><h3>Script config</h3></div> 	
+			<div class="col-md-12">
+				<div class="row form-group">
+					<h3 id="badgeConfig" class=" ${active ? 'hidden' : ''}">Script config</h3>
+					<h3 id="badgeActive" class="btn-primary ${active ? '' : 'hidden'}">Script active</h3>
+					<h3 id="badgeFound" class="btn-success hidden">Found !!!</h3>
+				</div> 	
 				<div class="row form-group">
 					<div class="col-md-1"><label for="delay" class="control-label">Delay</label></div>
 					<div class="col-md-3"><input type="text" id="delay" class="form-control inline-block"></div>
 					<div class="col-md-3"><input type="text" id="delayRandom" class="form-control inline-block"></div>
 				</div>	
-
 				<div class="row form-group">
 					<div class="col-md-1"><label for="sinalPrice" class="control-label">Price </label></div>
 					<div class="col-md-3"><input type="text" id="signalPrice" class="form-control inline-block"></div>
@@ -107,14 +115,14 @@ function alertText() {
 				</div>	
 				</div> <div class="row form-group">
 					<div class="col-md-2">
-						<button type="button" id="applySignalButton" class="btn btn-primary form-control inline-block" data-dismiss="alert">Apply</button>
+						<button type="button" id="applySignalButton" class="btn btn-success form-control inline-block" data-dismiss="alert">Apply</button>
 					</div>
 					<div class="col-md-2"></div>
 					<div class="col-md-2">
-						<button type="button" id="clearStorage" class="btn btn-primary text-warning form-control inline-block" data-dismiss="alert">Clear storage</button>
+						<button type="button" id="clearStorage" class="btn btn-danger form-control inline-block" data-dismiss="alert">Clear storage</button>
 					</div>
 					<div class="col-md-2">
-						<a href="https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}" class="btn btn-primary text-warning form-control inline-block" data-dismiss="alert">-> Translate</a>
+						<a href="https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}" class="btn btn-primary form-control inline-block" data-dismiss="alert">-> Translate</a>
 					</div>
 				</div>
 			</div>

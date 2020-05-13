@@ -71,7 +71,7 @@
 		active: false
 	}
 
-    StorageUtils = {
+    const StorageUtils = {
 		SAVED_SEARCHES: "SAVED_SEARCHES",
 		SAVED_OFFERS: "SAVED_OFFERS",
 		SAVED_DEFAULTS: "SAVED_DEFAULTS",

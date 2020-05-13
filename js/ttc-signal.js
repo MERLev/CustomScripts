@@ -2,16 +2,25 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.3.2
+// @version      0.3.4
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
-// @grant        none
+// @grant        GM_addStyle
+// @grant        GM_listValues
+// @grant        GM_deleteValue
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_log
 // ==/UserScript==
 
 (function() {
     'use strict';
-	
+    /*GM_addStyle("");
+    GM_listValues();
+    GM_setValue("123", 123);
+    GM_getValue("123");
+    GM_deleteValue("123");*/
 	var DELAY_KEY = "DELAY";
 	var DELAY_RANDOM_KEY = "DELAY_RANDOM";
 	var PAUSE_KEY = "PAUSE";
@@ -25,8 +34,15 @@
 			return
 		}
 		if (window.location.href.includes("Error")){
-		  window.history.back();
+			window.history.back();
 		}
+		/*
+        if (window.top === window.self) {
+			var gtranslateUrl = `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}&anno=2`;
+            $("#body > table > tbody > tr.align-top > td:nth-child(1)")
+                .append(`<a href="${url}" class="btn btn-primary form-control inline-block" data-dismiss="alert">Go down the rabbit hole</a>`)
+            return
+        }*/
 		$(document).keyup(function (e){
 			if(e.keyCode == 36){
 				alert('Script stopped');
@@ -67,7 +83,11 @@
 			localStorage.setItem(DELAY_KEY, $("#delay").val());
 			localStorage.setItem(DELAY_RANDOM_KEY, $("#delayRandom").val());
 			localStorage.setItem(PAUSE_KEY, $("#pauseFlag").prop("checked"));
-			location.reload();
+			if (window.top === window.self) {
+				window.location.assign(`https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}&anno=2`);
+			} else { 
+				location.reload();
+			}
 		});
 		$( "#clearStorage" ).click(function() {
 			localStorage.clear();
@@ -78,15 +98,12 @@
 			$("#signalPrice").val(signalPrice);
 			var found = false;
 			$('.gold-amount').each(function( index, value ) {
-				var price = parseInt($(value).contents().eq(2).text().split(',').join(''));
-				var number = parseInt($(value).contents().eq(6).text().split(',').join(''));
-				var total = parseInt($(value).contents().eq(10).text().split(',').join(''));
-				var name = $(value).parent().find('td').first().contents().eq(3).text();
-				if (price < signalPrice){
+				var offer = parseOffer(value);
+				if (offer.price < signalPrice){
 					$(value).parent().css('background-color', '#b94a48');
 					var linkk = $(value).parent().attr("data-on-click-link");
 					if (!localStorage.getItem(linkk)){
-						speak(name);
+						speak(offer.name);
 						localStorage.setItem(linkk, "found");
 					}
 					var found = true;
@@ -134,14 +151,10 @@
 						<div class="col-md-2">
 							<button type="button" id="clearStorage" class="btn btn-danger form-control inline-block" data-dismiss="alert">Clear storage</button>
 						</div>
-						<div class="col-md-2">
-							<a href="https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}" class="btn btn-primary form-control inline-block" data-dismiss="alert">-> Translate</a>
-						</div>
 					</div>
 				</div>
 			</form>
-		</div>`
-		
+		</div>`		
 	}
 	function speak(text){
 		var msg = new SpeechSynthesisUtterance(text);
@@ -152,5 +165,13 @@
 	}
 	function pauseEnabled(){
 		return localStorage.getItem(PAUSE_KEY) == 'true' ? true : false;
+	}
+	function parseOffer(el){
+		return {
+			price: parseInt($(el).contents().eq(2).text().split(',').join('')),
+			number: parseInt($(el).contents().eq(6).text().split(',').join('')),
+			total: parseInt($(el).contents().eq(10).text().split(',').join('')),
+			name: $(el).parent().find('td').first().contents().eq(3).text()
+		}
 	}
 })();

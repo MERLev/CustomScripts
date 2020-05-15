@@ -136,7 +136,7 @@
 						delete searchesList[pageId];
 					}
 				}
-				GM_setValue(StorageUtils.SAVED_SEARCHES, savedSearches);
+				GM_setValue(StorageUtils.SAVED_SEARCHES, searchesList);
 
 				var offersList = GM_getValue(StorageUtils.SAVED_OFFERS);
 				for (var offerId in offersList) {

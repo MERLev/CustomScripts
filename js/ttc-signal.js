@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.4
+// @version      0.4.5
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -167,13 +167,11 @@
 
         if (window.top === window.self) {
 			if (window.location.href.includes("translate.google")){
-				$("#wtgbr").hide();
-				$("#gt-c").hide();
-				$("#contentframe").css("top", "0px");
+				//$("#wtgbr").hide();
+				//$("#gt-c").hide();
+				//$("#contentframe").css("top", "0px");
 				return;
 			}
-			//$("#body > table > tbody > tr.align-top > td:nth-child(1)")
-            //    .append(`<a href="${getTranslaterUrl()}" class="btn btn-primary form-control inline-block">Go down the rabbit hole</a>`)
 			$("#topNavBar > ul.nav.navbar-nav.navbar-right")
                 .prepend(`<li><a href="${getTranslaterUrl()}" class="">Go down the rabbit hole</a></li>`)
             return
@@ -334,6 +332,6 @@
 		return hashCode(cleanUrl);
 	}
 	function getTranslaterUrl(){
-		return `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${window.location.href}&anno=2`;
+		return `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${encodeURIComponent(window.location.href)}&anno=2`;
 	}
 })();

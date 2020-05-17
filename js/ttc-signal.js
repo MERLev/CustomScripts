@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.8
+// @version      0.4.9
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -158,7 +158,7 @@
 		}
 		if ($("#g-recaptcha-response")[0]){
 			speak('Капча, капча');
-            if (window.top === window.self) {
+            if (window.top != window.self) {
                 setTimeout(function(){
                     location.reload();
                 }, 2000);

@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.7
+// @version      0.4.8
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -29,8 +29,8 @@
 	GM_addStyle(`
 		.signal-alert{
 			position: fixed;
-			top: 83px;
-			left: 10px;
+			top: 215px;
+			right: 10px;
 			width: 379px;
 			opacity: 25%;
 		}
@@ -158,7 +158,12 @@
 		}
 		if ($("#g-recaptcha-response")[0]){
 			speak('Капча, капча');
-			location.reload();
+            if (window.top === window.self) {
+                setTimeout(function(){
+                    location.reload();
+                }, 2000);
+                return;
+            }
 			//return
 		}
 		if ($("#body section > div > h1").text() == "Error"){
@@ -174,7 +179,7 @@
 			}
 			$("#topNavBar > ul.nav.navbar-nav.navbar-right")
                 .prepend(`<li><a href="${getTranslaterUrl()}" class="">Go down the rabbit hole</a></li>`)
-            return
+            //return
         }
 		$("body").css("background", "black");
 

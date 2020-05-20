@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.11
+// @version      0.4.12
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -247,12 +247,9 @@
 					$(value).parent().css('background-color', '#b94a48');
 					if (!StorageUtils.isOfferFound(offer)){
 						AudioUtils.speak(offer.name);
-						//StorageUtils.saveFoundOffer(offer);
+						StorageUtils.saveFoundOffer(offer);
 						found = true;
 					}
-					//$("#badgeFound").removeClass("hidden");
-					//$("#badgeActive").addClass("hidden");
-					//$("#badgeConfig").addClass("hidden");
 				}
 			});
 		}

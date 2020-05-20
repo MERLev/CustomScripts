@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.12
+// @version      0.4.13
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -21,9 +21,9 @@
 	//-- DEBUG
     GM_addStyle("");
     GM_listValues();
-    GM_setValue("123", 123);
-    GM_getValue("123");
-    GM_deleteValue("123");
+    GM_setValue("DEBUG", "DEBUG");
+    GM_getValue("DEBUG");
+    GM_deleteValue("DEBUG");
 	//-- DEBUG
 
 	GM_addStyle(`
@@ -33,6 +33,7 @@
 			right: 10px;
 			width: 379px;
 			opacity: 25%;
+			z-index: 99999;
 		}
 		.signal-alert:hover, .signal-alert.active{
 			opacity:100%
@@ -70,7 +71,48 @@
 		autoPause: true,
 		active: false
 	}
-
+	const Utils = {
+		hashCode: function(s){
+			return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+		}
+	}
+	const UrlUtils = {
+		isPageApplicable: function(){
+			return !window.location.href.includes("SearchResult");
+		},
+		isInIframe: function(){
+			return window.top == window.self;
+		},
+		isInTranslate: function(){
+			return window.location.href.includes("translate.google");
+		},
+		getCurrentPageHash: function(){
+			//ToDO fix for g translate
+			var url = new URL(document.location);
+			url.searchParams.delete("salt");
+			var cleanUrl = /SearchResult?(.*)/.exec(url.href)[0].split("&anno")[0];
+			return Utils.hashCode(cleanUrl);
+		},
+		getTranslaterUrl: function(){
+			var url = window.location.href;
+			if (!location.href.includes("ru-RU")){
+				url += "&lang=ru-RU";
+			}
+			return `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${encodeURIComponent(url)}&anno=2`;
+		},
+		reload: function(){
+			if (UrlUtils.isInTranslate){
+				document.location.reload();
+				return;
+			}
+			var url = new URL(document.location);
+			url.searchParams.set("salt", Utils.hashCode('' + new Date().getTime()));
+			document.location.replace(url.href);
+		},
+		back: function(){
+			window.history.back();
+		}
+	}
     const StorageUtils = {
 		SAVED_SEARCHES: "SAVED_SEARCHES",
 		SAVED_OFFERS: "SAVED_OFFERS",
@@ -88,14 +130,14 @@
 		},
 		loadCurrentSearch: function(){
 			var searchesList = GM_getValue(StorageUtils.SAVED_SEARCHES);
-			if (searchesList[currentPageId()]){
-				return searchesList[currentPageId()];
+			if (searchesList[UrlUtils.getCurrentPageHash()]){
+				return searchesList[UrlUtils.getCurrentPageHash()];
 			}
 			return null;
 		},
 		saveSearch: function(search){
 			var savedSearches = GM_getValue(StorageUtils.SAVED_SEARCHES);
-			savedSearches[currentPageId()] = search;
+			savedSearches[UrlUtils.getCurrentPageHash()] = search;
 			GM_setValue(StorageUtils.SAVED_SEARCHES, savedSearches);
 		},
 		isOfferFound: function(offer){
@@ -194,32 +236,32 @@
 		})()
 	}
 	$( document ).ready(function() {
-		if (!window.location.href.includes("SearchResult")){
+		if (UrlUtils.isPageApplicable()){
 			return
 		}
 		if ($("#g-recaptcha-response")[0]){
 			AudioUtils.speak('Капча, капча');
-            if (window.top != window.self) {
+            /*if (!UrlUtils.isInIframe()) {
                 setTimeout(function(){
                     location.reload();
                 }, 2000);
                 return;
-            }
+            }*/
 			//return
 		}
 		if ($("#body section > div > h1").text() == "Error"){
-			window.history.back();
+			UrlUtils.back();
 		}
 
-        if (window.top === window.self) {
-			if (window.location.href.includes("translate.google")){
+        if (UrlUtils.isInIframe()) {
+			if (UrlUtils.isInTranslate()){
 				//$("#wtgbr").hide();
 				//$("#gt-c").hide();
 				//$("#contentframe").css("top", "0px");
 				return;
 			}
 			$("#topNavBar > ul.nav.navbar-nav.navbar-right")
-                .prepend(`<li><a href="${getTranslaterUrl()}" class="">Go down the rabbit hole</a></li>`)
+                .prepend(`<li><a href="${UrlUtils.getTranslaterUrl()}" class="">Go down the rabbit hole</a></li>`)
             //return
         }
 		$("body").css("background", "black");
@@ -235,7 +277,7 @@
 					StorageUtils.saveCurrentSearch(search);
 				}
 				alert('Script stopped');
-				location.reload();
+				UrlUtils.reload();
 			}
 		});
 
@@ -263,7 +305,7 @@
 			$(".progressbar").css("transition",  "width " + calculatedDelay + "ms linear");
 			$(".progressbar").css("width",  "100%");
 			setTimeout(function func() {
-				location.reload();
+				UrlUtils.reload();
 			}, calculatedDelay);
 		}
 	});
@@ -276,24 +318,23 @@
 			search.active = true;
 			search.time = new Date().getTime();
 			StorageUtils.saveSearch(search);
-			location.reload();
+			UrlUtils.reload();
 		});
 		$("#stopBtn").click(function() {
 			var search = parseSearch();
 			search.active = false;
 			search.time = new Date().getTime();
 			StorageUtils.saveSearch(search);
-			location.reload();
+			UrlUtils.reload();
 		});
-		$( "#resetBtn" ).click(function() {
+		$("#resetBtn").click(function() {
 			StorageUtils.resetStorage();
-			location.reload();
+			UrlUtils.reload();
 		});
-		$( "#saveAsDefaultsBtn" ).click(function() {
+		$("#saveAsDefaultsBtn").click(function() {
 			var search = parseSearch();
 			search.active = false;
 			StorageUtils.saveDefaults(search);
-			//location.reload();
 		});
 	}
 	function generateAlertHtml(search) {
@@ -339,9 +380,6 @@
 			</form>
 		</div>`
 	}
-	function hashCode(s){
-		return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
-	}
 	function parseOffer(el){
 		var url = $(el).parent().attr("data-on-click-link");
 		return {
@@ -350,7 +388,7 @@
 			total: parseInt($(el).contents().eq(10).text().split(',').join('')),
 			name: $(el).parent().find('td').first().contents().eq(3).text(),
 			url: url,
-			hash: hashCode(url),
+			hash: Utils.hashCode(url),
 			time: new Date().getTime()
 		}
 	}
@@ -362,16 +400,5 @@
 			autoPause: $("#autoPauseInp").is(":checked"),
 			active: false
 		}
-	}
-	function currentPageId(){
-		var cleanUrl = /SearchResult?(.*)/.exec(window.location.href)[0].split("&anno")[0];
-		return hashCode(cleanUrl);
-	}
-	function getTranslaterUrl(){
-		var url = window.location.href;
-		if (!location.href.includes("ru-RU")){
-			url += "&lang=ru-RU";
-		}
-		return `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${encodeURIComponent(url)}&anno=2`;
 	}
 })();

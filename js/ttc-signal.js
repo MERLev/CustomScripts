@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.13
+// @version      0.4.14
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -101,7 +101,7 @@
 			return `https://translate.google.com/translate?hl=&sl=ja&tl=ru&u=${encodeURIComponent(url)}&anno=2`;
 		},
 		reload: function(){
-			if (UrlUtils.isInTranslate){
+			if (UrlUtils.isInTranslate()){
 				document.location.reload();
 				return;
 			}

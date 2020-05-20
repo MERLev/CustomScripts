@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.10
+// @version      0.4.11
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -149,18 +149,56 @@
 			}
 		}
     }
-    var audioCtxClass = window.AudioContext || window.webkitAudioContext || window.audioContext;
-	var audioCtx = null;
-    if (audioCtxClass != undefined){
-        audioCtx = new audioCtxClass;
-    }
+	const AudioUtils = {
+		speak: function(text){
+			if (window.speechSynthesis == undefined){
+				AudioUtils.beep(1000, 2);
+				return;
+			}
+			var msg = new SpeechSynthesisUtterance(text);
+			if (/[а-яА-ЯЁё]/.test(text)){
+				msg.lang="ru-RU"
+			}
+			window.speechSynthesis.speak(msg);
+		},
+		beep: (function () {
+			var ctxClass = window.audioContext ||window.AudioContext || window.AudioContext || window.webkitAudioContext
+			var ctx = new ctxClass();
+			return function (duration, type, finishedCallback) {
 
+				duration = +duration;
+
+				// Only 0-4 are valid types.
+				type = (type % 5) || 0;
+
+				if (typeof finishedCallback != "function") {
+					finishedCallback = function () {};
+				}
+
+				var osc = ctx.createOscillator();
+
+				osc.type = type;
+				//osc.type = "sine";
+
+				osc.connect(ctx.destination);
+				if (osc.noteOn) osc.noteOn(0); // old browsers
+				if (osc.start) osc.start(); // new browsers
+
+				setTimeout(function () {
+					if (osc.noteOff) osc.noteOff(0); // old browsers
+					if (osc.stop) osc.stop(); // new browsers
+					finishedCallback();
+				}, duration);
+
+			};
+		})()
+	}
 	$( document ).ready(function() {
 		if (!window.location.href.includes("SearchResult")){
 			return
 		}
 		if ($("#g-recaptcha-response")[0]){
-			speak('Капча, капча');
+			AudioUtils.speak('Капча, капча');
             if (window.top != window.self) {
                 setTimeout(function(){
                     location.reload();
@@ -208,8 +246,8 @@
 				if (offer.price < currSearch.price){
 					$(value).parent().css('background-color', '#b94a48');
 					if (!StorageUtils.isOfferFound(offer)){
-						speak(offer.name);
-						StorageUtils.saveFoundOffer(offer);
+						AudioUtils.speak(offer.name);
+						//StorageUtils.saveFoundOffer(offer);
 						found = true;
 					}
 					//$("#badgeFound").removeClass("hidden");
@@ -303,15 +341,6 @@
 				</div>
 			</form>
 		</div>`
-	}
-	function speak(text){
-        if (audioCtx == null)
-            return;
-		var msg = new SpeechSynthesisUtterance(text);
-		if (/[а-яА-ЯЁё]/.test(text)){
-			msg.lang="ru-RU"
-		}
-		window.speechSynthesis.speak(msg);
 	}
 	function hashCode(s){
 		return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);

@@ -2,7 +2,7 @@
 // @name         ttc-signal
 // @updateUrl    https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
 // @downloadUrl  https://raw.githubusercontent.com/MERLev/CustomScripts/master/js/ttc-signal.js
-// @version      0.4.14
+// @version      0.5.0
 // @description  Notifications for ttc
 // @author       Mer1e
 // @include      https://*eu.tamrieltradecentre.com/*
@@ -13,9 +13,11 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_log
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 (function() {
+    var PRICE_DELIMITER = '&nbsp;';
     'use strict';
 
 	//-- DEBUG
@@ -235,7 +237,8 @@
 			};
 		})()
 	}
-	$( document ).ready(function() {
+    /*$(document).ready(function() {*/
+    var init = function() {
 		if (UrlUtils.isPageApplicable()){
 			return
 		}
@@ -308,7 +311,21 @@
 				UrlUtils.reload();
 			}, calculatedDelay);
 		}
-	});
+    };
+
+    $(document).ready(function() {
+        var delayedReady = function() {
+            setTimeout(function() {
+                if ($("[data-bind='with: TradeListPageModel']").length != 0) {
+                    init();
+                } else {
+                    delayedReady();
+                }
+            }, 200);
+        }
+        delayedReady();
+    });
+
 	function drawAlert(currSearch, defaults){
 		$("#help-collect-data-alert").remove();
 		$('<div class="progressbar"></div>').insertAfter(".navbar");
@@ -381,17 +398,21 @@
 		</div>`
 	}
 	function parseOffer(el){
-		var url = $(el).parent().attr("data-on-click-link");
+        var playerId = $(el).parent().find(".hidden-xs [data-bind='text: PlayerID']").html();
+        var name = $(el).parent().find('td').first().contents().eq(3).text();
 		return {
-			price: parseInt($(el).contents().eq(2).text().split(',').join('')),
-			number: parseInt($(el).contents().eq(6).text().split(',').join('')),
-			total: parseInt($(el).contents().eq(10).text().split(',').join('')),
-			name: $(el).parent().find('td').first().contents().eq(3).text(),
-			url: url,
-			hash: Utils.hashCode(url),
+			price: parsePrice($(el).find("[data-bind='localizedNumber: UnitPrice']")),
+			number: parsePrice($(el).find("[data-bind='localizedNumber: Amount']")),
+			total: parsePrice($(el).find("[data-bind='localizedNumber: TotalPrice']")),
+			name: name,
+            playerId: playerId,
+            hash: Utils.hashCode(playerId + name),
 			time: new Date().getTime()
 		}
 	}
+    function parsePrice(el) {
+        return parseInt(el.html().split(PRICE_DELIMITER).join(''));
+    }
 	function parseSearch(){
 		return {
 			delay: parseInt($("#delayInp").val()),
